@@ -86,20 +86,30 @@ const withGenre = {...movie, genre: "Novel?"};
 movie.isGoodRating();
 
 //Library of books:
+const searchBar = document.getElementById("searchBar");
+const testDiv = document.getElementById("testDiv");
+const bookList = document.getElementById("bookList");
+
+searchBar.addEventListener('keypress', (e) => {
+    if (e.key === "Enter"){
+        const searchTxt = searchBar.value;
+        searchBook(searchTxt);
+    }
+});
 
 const libraryBooks = {
     books: {
-        "978-0143127741": {title: "To Kill a Mockingbird", author: "Harper Lee", year: 1960, rating: 10, availableCopies: 4},
-        "978-0143127742": {title: "The Pragmactic Programmer", author: "Andy Hunt", year: 1999, rating: 9.3, availableCopies: 5}
+        "978-0143127741": {title: "To Kill a Mockingbird", author: "Harper Lee", year: 1960, rating: 10, genre: "Romance", availableCopies: 4},
+        "978-0143127742": {title: "The Pragmatic Programmer", author: "Andy Hunt", year: 1999, rating: 9.3, genre: "Computer", availableCopies: 5}
     },
 
-    addBooks(isbn, title, author, year, rating, availableCopies){
+    addBooks(isbn, title, author, year, rating, genre, availableCopies){
         if (this.books.hasOwnProperty(isbn)){
             console.log("Book already exists");
             return;
         }
 
-        this.books[isbn] = { title, author, year, rating, availableCopies }
+        this.books[isbn] = { title, author, year, rating, genre, availableCopies }
     },
     listBooks(){
         console.log("Book Library: ");
@@ -153,7 +163,50 @@ const libraryBooks = {
         }else{
             console.log("The book is available or doesn't exist!!!");
         }
+    },
+    filterBooksByGenre(genre){
+        if (typeof genre !== "string" || genre.trim() === ""){
+            console.log("Incorrect genre or not a string!");
+            return;
+        }
+
+        const results = Object.values(this.books).filter(book => book.genre === genre);
+
+        results.forEach(book => console.log(`${book.title} by ${book.author}`));
+    },
+    getTopRatedBooks(rating){
+        if (isNaN(rating) || rating < 0 || rating > 10){
+            console.log("Not a number or invalid rating!");
+            return;
+        }
+
+        console.log
+        const books = Object.values(this.books).filter(book => book.rating >= rating);
+
+        if (books.length === 0){
+            console.log("Sorry, but no books meet the criteria!");
+            return;
+        }
+
+        books.forEach(book => console.log(`${book.title} by ${book.author} - Rating: ${book.rating}`));
     }
+}
+
+function searchBook(search){
+    search = search.trim().toLowerCase();
+
+    if (search.length === 0){
+        console.log("Type something!");
+        return;
+    }
+
+    results = Object.values(libraryBooks.books).filter(book => book.title.toLowerCase().includes(search) || book.author.toLowerCase().includes(search));
+
+    results.forEach(book => {
+        const newElement = document.createElement("li");
+        newElement.textContent = `${book.title} by ${book.author}`;
+        bookList.appendChild(newElement);
+    })
 }
 
 libraryBooks.addBooks("978-8888888888", "1984", "George Orwell", 1949, 9.5);
