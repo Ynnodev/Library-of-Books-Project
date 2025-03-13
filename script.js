@@ -89,12 +89,34 @@ movie.isGoodRating();
 const searchBar = document.getElementById("searchBar");
 const testDiv = document.getElementById("testDiv");
 const bookList = document.getElementById("bookList");
+const addBookBtn = document.getElementById("setBook");
+const addBookModal = document.getElementById("addBookModal");
+const sendBookBrn = document.getElementById("sendBook");
 
 searchBar.addEventListener('keypress', (e) => {
-    if (e.key === "Enter"){
+    if (e.key === "Enter"){ //TO FINISH:
         const searchTxt = searchBar.value;
         searchBook(searchTxt);
     }
+});
+
+addBookBtn.addEventListener('click', function(){
+    const isbn = document.getElementById("isbnBookInput").value;
+    const bookTitle = document.getElementById("titleBookInput").value;
+    const bookAuthor = document.getElementById("authorBookInput").value;
+    const bookYear = document.getElementById("yearBookInput").value;
+    const bookRating = parseFloat(document.getElementById("ratingBookInput").value);
+    const bookGenre = document.getElementById("genreBookInput").value;
+    const bookAV = document.getElementById("acBookInput").value;
+    addBookModal.showModal();
+
+    sendBookBrn.addEventListener('click', function(){ //FIX!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        if (!isbn || !bookTitle || !bookAuthor || isNaN(bookYear) || isNaN(bookRating) || !bookGenre || isNaN(bookAV)){
+            console.log("Please, fulfill all the inputs!")
+        }
+
+        libraryBooks.addBooks(isbn, bookTitle, bookAuthor, bookYear, bookRating, bookGenre, bookAV);
+    });
 });
 
 const libraryBooks = {
@@ -192,6 +214,7 @@ const libraryBooks = {
     }
 }
 
+//functions
 function searchBook(search){
     search = search.trim().toLowerCase();
 
@@ -200,7 +223,7 @@ function searchBook(search){
         return;
     }
 
-    results = Object.values(libraryBooks.books).filter(book => book.title.toLowerCase().includes(search) || book.author.toLowerCase().includes(search));
+    const results = Object.values(libraryBooks.books).filter(book => book.title.toLowerCase().includes(search) || book.author.toLowerCase().includes(search));
 
     results.forEach(book => {
         const newElement = document.createElement("li");
