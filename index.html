@@ -20,7 +20,8 @@
 
                     <input id="searchBar" type="type" placeholder="Type a Book's Title!">
                     <nav class="navbar">
-                        <button id="setBook">Add a Book!</button>
+                        <button class="button" id="setBook">Add a Book!</button>
+                        <button class="button" id="borrowBookBtn">Borrow Book</button>
                         <a href="#">Login</a>
                         <a href="#">Profile</a>
                     </nav>
@@ -38,30 +39,32 @@
 
         <!--Dialogs:-->
         <dialog id="addBookModal">
-            <h1>Add Your Book to the Library:</h1>
+            <form id="addBookForm">
+                <h1>Add Your Book to the Library:</h1>
 
-            <h3>Book's isbn: </h3>
-            <input type="text" id="isbnBookInput" placeholder="999-9999999999">
+                <h3>Book's isbn: </h3>
+                <input type="text" id="isbnBookInput" placeholder="999-9999999999">
+        
+                <h3>Book's title: </h3>
+                <input type="text" id="titleBookInput" placeholder="Type the title of the book!">
+                
+                <h3>Book's Author: </h3>
+                <input type="text" id="authorBookInput" placeholder="Type in the Book's author!"">
     
-            <h3>Book's title: </h3>
-            <input type="text" id="titleBookInput" placeholder="Type the title of the book!">
-            
-            <h3>Book's Author: </h3>
-            <input type="text" id="authorBookInput" placeholder="Type in the Book's author!"">
-
-            <h3>Book's year: </h3>
-            <input type="number" id="yearBookInput" min="0" max="2025">
-
-            <h3>Book's average rating: </h3>
-            <input type="number" id="ratingBookInput" max="10" min="0" width="50px">
-
-            <h3>Book's genre: </h3>
-            <input type="text" id="genreBookInput" placeholder="type the book's genre">
-
-            <h3>Book's Quantity of Available Copies: </h3>
-            <input type="number" id="acBookInput" min="1" max="100">
-
-            <button id="sendBook">Add Book</button>
+                <h3>Book's year: </h3>
+                <input type="number" id="yearBookInput" min="0" max="2025">
+    
+                <h3>Book's average rating: </h3>
+                <input type="number" id="ratingBookInput" max="10" min="0" width="50px">
+    
+                <h3>Book's genre: </h3>
+                <input type="text" id="genreBookInput" placeholder="type the book's genre">
+    
+                <h3>Book's Quantity of Available Copies: </h3>
+                <input type="number" id="acBookInput" min="1" max="100">
+    
+                <button id="sendBook">Add Book</button>               
+            </form>
         </dialog>
     </main>
 

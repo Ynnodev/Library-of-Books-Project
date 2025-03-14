@@ -1,90 +1,3 @@
-const user = {
-    name: "Pedro", //Property
-    surname: "Igor", //Property
-    age: 19, //Property
-    role: "Programmer",
-    isAdmin: true,
-    greet(){ //Method
-        console.log(`Hello, I'm ${this.name}!!`);
-    }
-}
-
-const { name: RenamedName = "Guest", surname, age, role } = user;
-const anotherObj = {
-    city: "New York",
-    state: "Massachusetts"
-}
-
-const person = {
-    name: "MyName",
-    age: "MyAge"
-};
-
-const allMerged = { ...person, ...anotherObj };
-
-const newPerson = { ...person };
-
-const mergedAgain = Object.assign({}, person, anotherObj);
-console.log(mergedAgain);
-
-user.name = "Sonic the Hedgehog";
-delete user.surname;
-console.log(user);
-
-console.log(user.hasOwnProperty("name"));
-console.log("age" in user);
-
-for (let key in user){
-    console.log(`${key}: ${user[key]}`);
-}
-
-console.log(Object.values(user));
-console.log(Object.entries(user));
-console.log(Object.keys(user));
-
-const library = {
-    name: "Name",
-    books: [
-        {
-            title: "Idk",
-            author: "Myself"
-        }
-    ],
-    addBook(title, author){
-        this.books.push({title, author})
-    },
-    listBooks(){
-        for (key in this.books){
-            console.log(`${this.books[key].title} by ${this.books[key].author}`);
-        }
-    }
-}
-
-library.addBook("1984", "George Orwell");
-library.addBook("Beyond Good and Evil", "Michel Ancel");
-library.listBooks();
-
-const obj1 = { name: "Alice", surname: "Mary", details: { age: 19 } }
-const obj2 = obj1;
-const obj3 = structuredClone(obj1);
-
-obj2.details.age = 25;
-console.log(obj1);
-
-const movie = {
-    title: "Steven Universe: The Movie",
-    director: "Rebecca Sugar",
-    releaseYear: 2022,
-    rating: 6,
-    isGoodRating(){
-        return console.log(this.rating >= 7);
-    }
-}
-
-const { title, rating } = movie;
-const withGenre = {...movie, genre: "Novel?"};
-movie.isGoodRating();
-
 //Library of books:
 const searchBar = document.getElementById("searchBar");
 const testDiv = document.getElementById("testDiv");
@@ -92,6 +5,7 @@ const bookList = document.getElementById("bookList");
 const addBookBtn = document.getElementById("setBook");
 const addBookModal = document.getElementById("addBookModal");
 const sendBookBrn = document.getElementById("sendBook");
+const borrowBookBtn = document.getElementById("borrowBookBtn");
 
 searchBar.addEventListener('keypress', (e) => {
     if (e.key === "Enter"){ //TO FINISH:
@@ -101,22 +15,32 @@ searchBar.addEventListener('keypress', (e) => {
 });
 
 addBookBtn.addEventListener('click', function(){
+    addBookModal.showModal();
+});
+
+sendBookBrn.addEventListener('click', function(){
+    const addBookForm = document.getElementById("addBookForm");
     const isbn = document.getElementById("isbnBookInput").value;
     const bookTitle = document.getElementById("titleBookInput").value;
     const bookAuthor = document.getElementById("authorBookInput").value;
-    const bookYear = document.getElementById("yearBookInput").value;
+    const bookYear = parseInt(document.getElementById("yearBookInput").value);
     const bookRating = parseFloat(document.getElementById("ratingBookInput").value);
     const bookGenre = document.getElementById("genreBookInput").value;
-    const bookAV = document.getElementById("acBookInput").value;
-    addBookModal.showModal();
+    const bookAV = parseInt(document.getElementById("acBookInput").value);
 
-    sendBookBrn.addEventListener('click', function(){ //FIX!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        if (!isbn || !bookTitle || !bookAuthor || isNaN(bookYear) || isNaN(bookRating) || !bookGenre || isNaN(bookAV)){
-            console.log("Please, fulfill all the inputs!")
-        }
+    if (!isbn || !bookTitle || !bookAuthor || isNaN(bookYear) || isNaN(bookRating) || !bookGenre || isNaN(bookAV)){
+        console.log("Please, fulfill all the inputs!");
+        return;
+    }
 
-        libraryBooks.addBooks(isbn, bookTitle, bookAuthor, bookYear, bookRating, bookGenre, bookAV);
-    });
+    //ERROR: The books isn't being added to the books object.
+    libraryBooks.addBooks(isbn, bookTitle, bookAuthor, bookYear, bookRating, bookGenre, bookAV);
+    console.log("Book added successfuly!");
+    addBookForm.reset();
+});
+
+borrowBookBtn.addEventListener('click', function(){
+
 });
 
 const libraryBooks = {
@@ -153,16 +77,6 @@ const libraryBooks = {
             const book = this.books[isbn];
             console.log(`${book.title} by ${book.author}`);
         });
-    },
-    borrowBook(title){
-        const bookObj = Object.values(this.books).find(book => book.title === title);
-
-        if (bookObj && bookObj.availableCopies > 0){
-            bookObj.availableCopies--;
-            console.log(`You've borrowed the book ${title}!`);
-        }else{
-            console.log(`Sorry, no results for ${title}`);
-        }
     },
     returnBook(title){
         const bookObj = Object.values(this.books).find(book => book.title === title);
@@ -232,5 +146,26 @@ function searchBook(search){
     })
 }
 
+function borrowBook(bookTitle){
+    return new Promise((resolve, reject) => { //Promise ready, but I gotta still call it on the code.
+        setTimeout(() => {
+            const success = true;
+            const book = Object.values(libraryBooks.books).filter(book => book.title.includes(bookTitle));
+
+            if (!book){
+                reject("Book not found");
+                return;
+            }
+
+            if (success && book.availableCopies > 0){
+                book.availableCopies--;
+                resolve(`Congratulations! The book ${bookTitle} by ${book.author} was borrowed!`);
+            }else{
+                reject(`Sorry, but the book couldn't be borrowed`);
+            }
+        }, 2000);
+    });
+}
+
 libraryBooks.addBooks("978-8888888888", "1984", "George Orwell", 1949, 9.5);
-libraryBooks.listBooks();
+console.log(libraryBooks.books);
