@@ -6,11 +6,20 @@ const addBookBtn = document.getElementById("setBook");
 const addBookModal = document.getElementById("addBookModal");
 const sendBookBrn = document.getElementById("sendBook");
 const borrowBookBtn = document.getElementById("borrowBookBtn");
+//Let scope varaibles:
+let isBorrowing = false;
 
 searchBar.addEventListener('keypress', (e) => {
     if (e.key === "Enter"){ //TO FINISH:
-        const searchTxt = searchBar.value;
-        searchBook(searchTxt);
+        if (isBorrowing === false){
+            const searchTxt = searchBar.value;
+            searchBook(searchTxt);
+        }else{
+            const query = searchBar.value;
+            borrowBook(query)
+                .then(result => console.log(result))
+                .catch(error => console.log(error))
+        }
     }
 });
 
@@ -40,22 +49,31 @@ sendBookBrn.addEventListener('click', function(){
 });
 
 borrowBookBtn.addEventListener('click', function(){
+    isBorrowing = !isBorrowing;
 
+    if (isBorrowing){
+        searchBar.focus()
+        searchBar.setAttribute('placeholder', `Type in the name of the book you wanna borrow!`);
+
+    }else{
+        searchBar.setAttribute('placeholder', `Type in a Book's Title!`);
+        searchBar.style.backgroundColor = `white`
+    }
 });
 
 const libraryBooks = {
     books: {
-        "978-0143127741": {title: "To Kill a Mockingbird", author: "Harper Lee", year: 1960, rating: 10, genre: "Romance", availableCopies: 4},
-        "978-0143127742": {title: "The Pragmatic Programmer", author: "Andy Hunt", year: 1999, rating: 9.3, genre: "Computer", availableCopies: 5}
+        "978-0143127741": {title: "To Kill a Mockingbird", author: "Harper Lee", year: 1960, rating: 10, genre: "Romance", availableCopies: 4, available: true},
+        "978-0143127742": {title: "The Pragmatic Programmer", author: "Andy Hunt", year: 1999, rating: 9.3, genre: "Computer", availableCopies: 5, available: true}
     },
 
-    addBooks(isbn, title, author, year, rating, genre, availableCopies){
+    addBooks(isbn, title, author, year, rating, genre, availableCopies, available){
         if (this.books.hasOwnProperty(isbn)){
             console.log("Book already exists");
             return;
         }
 
-        this.books[isbn] = { title, author, year, rating, genre, availableCopies }
+        this.books[isbn] = { title, author, year, rating, genre, availableCopies, available }
     },
     listBooks(){
         console.log("Book Library: ");
@@ -89,15 +107,13 @@ const libraryBooks = {
         }
     },
     reserveBooks(title){
-        const bookObj = Object.values(this.books).find(book => book.title === title);
+        const bookObj = Object.values(this.books).find(book => book.title.toLowerCase().includes(title.toLowerCase()));
 
-        if (bookObj && bookObj.availableCopies === 0){
-            if (!bookObj.reserved){
-                bookObj.reserved = true;
-                console.log(`You've reserved the book ${title}. We'll notify you when the book is available`);
-            }
+        if (bookObj && bookObj.availableCopies === 0 && bookObj.available){
+            bookObj.available = false;
+            console.log("Congratulationsm you've reserved a book!");
         }else{
-            console.log("The book is available or doesn't exist!!!");
+            console.log("The books exists or is already reserved.");
         }
     },
     filterBooksByGenre(genre){
@@ -143,14 +159,14 @@ function searchBook(search){
         const newElement = document.createElement("li");
         newElement.textContent = `${book.title} by ${book.author}`;
         bookList.appendChild(newElement);
-    })
+    });
 }
 
 function borrowBook(bookTitle){
-    return new Promise((resolve, reject) => { //Promise ready, but I gotta still call it on the code.
+    return new Promise((resolve, reject) => {
         setTimeout(() => {
             const success = true;
-            const book = Object.values(libraryBooks.books).filter(book => book.title.includes(bookTitle));
+            const book = Object.values(libraryBooks.books).find(book => book.title.toLowerCase().includes(bookTitle));
 
             if (!book){
                 reject("Book not found");
