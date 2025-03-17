@@ -18,6 +18,8 @@ searchBar.addEventListener('keypress', async (e) => {
         } catch (error) {
             console.log(error);
         }
+    }else if (e.key == "Enter" && !isBorrowing){
+        searchBook(searchBar.value);
     }
 });
 
@@ -161,13 +163,51 @@ const libraryBooks = {
         }
     },
     suggestRandomBook(){
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
             setTimeout(() => {
                 const allBooks = Object.values(this.books);
                 const randomIndex = Math.floor(Math.random() * allBooks.length);
                 const book = allBooks[randomIndex];
+
+                if (allBooks.length === 0){
+                    reject("Sorry, but there are no books available.");
+                    return;
+                }
+
                 resolve(book);
             }, 2000)
+        })
+    },
+    checkBookAvailable(book){//Call this method on the UI!
+        return new Promise((resolve, reject) => {
+            setTimeout(() => {
+                const wishedBook = Object.values(this.books).find(thebook => thebook.title.toLowerCase().includes(book.toLowerCase()));
+                if (!wishedBook || wishedBook.availableCopies === 0){
+                    reject("Sorry, but this book doesn't exist or is not available!")
+                }
+
+                if (wishedBook && wishedBook.availableCopies > 1){
+                    resolve(`The book ${wishedBook} by ${wishedBook.author} has ${wishedBook.availableCopies} available!`);
+                }
+            }, 2000);
+        })
+    },
+    async borrowMultipleSettled(...titles){//Call this method on the UI!
+        if (!titles.length || titles.some(t => typeof t !== "string")){
+            console.log("No books identified or not strings!");
+            return;
+        }
+
+        const results = await Promise.allSettled(titles.map(t => borrowBook(t.trim())));
+
+        results.forEach((result, index) => {
+            const li = document.createElement("li");
+            if (result.status === "fulfilled"){
+                li.textContent = `Borrowed: ${result.value} successfully!`;
+            }else{
+                li.textContent = `Failed to borrow: "${titles[index]}": ${result.reason}`
+            }
+            bookList.appendChild(li);
         })
     }
 }
@@ -216,3 +256,5 @@ function borrowBook(bookTitle){
 
 libraryBooks.addBooks("978-1234567890", "Test Book", "John Doe", 2020, 8.5, "Fiction", 3);
 libraryBooks.listBooks();
+//Testing new borrowMultipleBook feature:
+libraryBooks.borrowMultipleSettled("To Kill a Mockingbird", "Fake Book", "The Pragmatic Programmer");
