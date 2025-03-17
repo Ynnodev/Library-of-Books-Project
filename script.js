@@ -6,19 +6,17 @@ const addBookBtn = document.getElementById("setBook");
 const addBookModal = document.getElementById("addBookModal");
 const sendBookBrn = document.getElementById("sendBook");
 const borrowBookBtn = document.getElementById("borrowBookBtn");
+const suggestRandomBookBtn = document.getElementById("suggestRandomBook");
 //Let scope varaibles:
 let isBorrowing = false;
 
-searchBar.addEventListener('keypress', (e) => {
-    if (e.key === "Enter"){ //TO FINISH:
-        if (isBorrowing === false){
-            const searchTxt = searchBar.value;
-            searchBook(searchTxt);
-        }else{
-            const query = searchBar.value;
-            borrowBook(query)
-                .then(result => console.log(result))
-                .catch(error => console.log(error))
+searchBar.addEventListener('keypress', async (e) => {
+    if (e.key === "Enter" && isBorrowing){
+        try {
+            const result = await borrowBook(searchBar.value);
+            console.log(result);
+        } catch (error) {
+            console.log(error);
         }
     }
 });
@@ -29,22 +27,18 @@ addBookBtn.addEventListener('click', function(){
 
 sendBookBrn.addEventListener('click', function(){
     const addBookForm = document.getElementById("addBookForm");
-    const isbn = document.getElementById("isbnBookInput").value;
-    const bookTitle = document.getElementById("titleBookInput").value;
-    const bookAuthor = document.getElementById("authorBookInput").value;
+    const isbn = toString(document.getElementById("isbnBookInput").value);
+    const bookTitle = toString(document.getElementById("titleBookInput").value);
+    const bookAuthor = toString(document.getElementById("authorBookInput").value);
     const bookYear = parseInt(document.getElementById("yearBookInput").value);
     const bookRating = parseFloat(document.getElementById("ratingBookInput").value);
-    const bookGenre = document.getElementById("genreBookInput").value;
+    const bookGenre = toString(document.getElementById("genreBookInput").value);
     const bookAV = parseInt(document.getElementById("acBookInput").value);
-
-    if (!isbn || !bookTitle || !bookAuthor || isNaN(bookYear) || isNaN(bookRating) || !bookGenre || isNaN(bookAV)){
-        console.log("Please, fulfill all the inputs!");
-        return;
-    }
 
     //ERROR: The books isn't being added to the books object.
     libraryBooks.addBooks(isbn, bookTitle, bookAuthor, bookYear, bookRating, bookGenre, bookAV);
-    console.log("Book added successfuly!");
+    console.log("Book added successfuly!", libraryBooks.books[isbn]);
+    addBookModal.close();
     addBookForm.reset();
 });
 
@@ -61,13 +55,24 @@ borrowBookBtn.addEventListener('click', function(){
     }
 });
 
+suggestRandomBookBtn.addEventListener('click', async function(){
+    try {
+        const suggestedBook = await libraryBooks.suggestRandomBook();
+        const liElement = document.createElement("li");
+        liElement.textContent = `Suggested Book: ${suggestedBook.title} by ${suggestedBook.author}`
+        bookList.appendChild(liElement);
+    } catch (error) {
+        console.log("Couldn't do it");
+    }
+})
+
 const libraryBooks = {
     books: {
         "978-0143127741": {title: "To Kill a Mockingbird", author: "Harper Lee", year: 1960, rating: 10, genre: "Romance", availableCopies: 4, available: true},
         "978-0143127742": {title: "The Pragmatic Programmer", author: "Andy Hunt", year: 1999, rating: 9.3, genre: "Computer", availableCopies: 5, available: true}
     },
 
-    addBooks(isbn, title, author, year, rating, genre, availableCopies, available){
+    addBooks(isbn, title, author, year, rating, genre, availableCopies, available = true){
         if (this.books.hasOwnProperty(isbn)){
             console.log("Book already exists");
             return;
@@ -111,7 +116,7 @@ const libraryBooks = {
 
         if (bookObj && bookObj.availableCopies === 0 && bookObj.available){
             bookObj.available = false;
-            console.log("Congratulationsm you've reserved a book!");
+            console.log("Congratulations you've reserved a book!");
         }else{
             console.log("The books exists or is already reserved.");
         }
@@ -122,9 +127,10 @@ const libraryBooks = {
             return;
         }
 
-        const results = Object.values(this.books).filter(book => book.genre === genre);
-
-        results.forEach(book => console.log(`${book.title} by ${book.author}`));
+        return Object.values(this.books).reduce((acc, book) => {
+            if (book.genre === genre) acc.push(`${book.title} by ${book.author}`);
+            return acc;
+        }, []).join("\n");
     },
     getTopRatedBooks(rating){
         if (isNaN(rating) || rating < 0 || rating > 10){
@@ -132,7 +138,6 @@ const libraryBooks = {
             return;
         }
 
-        console.log
         const books = Object.values(this.books).filter(book => book.rating >= rating);
 
         if (books.length === 0){
@@ -141,6 +146,29 @@ const libraryBooks = {
         }
 
         books.forEach(book => console.log(`${book.title} by ${book.author} - Rating: ${book.rating}`));
+    },
+    async borrowMultipleBooks(...titles){
+        if (!titles.length || titles.some(t => typeof t !== "string")){
+            console.log("Error!!");
+            return;
+        }
+
+        try {
+            const results = await Promise.all(titles.map(title => borrowBook(title.trim())));
+            console.log("All books borrowed successfully: ", results);
+        } catch (error) {
+            console.log("Some books couldn't be borrowed: ", error);
+        }
+    },
+    suggestRandomBook(){
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                const allBooks = Object.values(this.books);
+                const randomIndex = Math.floor(Math.random() * allBooks.length);
+                const book = allBooks[randomIndex];
+                resolve(book);
+            }, 2000)
+        })
     }
 }
 
@@ -166,7 +194,7 @@ function borrowBook(bookTitle){
     return new Promise((resolve, reject) => {
         setTimeout(() => {
             const success = true;
-            const book = Object.values(libraryBooks.books).find(book => book.title.toLowerCase().includes(bookTitle));
+            const book = Object.values(libraryBooks.books).find(book => book.title.toLowerCase().includes(bookTitle.toLowerCase()));
 
             if (!book){
                 reject("Book not found");
@@ -175,13 +203,16 @@ function borrowBook(bookTitle){
 
             if (success && book.availableCopies > 0){
                 book.availableCopies--;
-                resolve(`Congratulations! The book ${bookTitle} by ${book.author} was borrowed!`);
+                const liElement = document.createElement("li");
+                liElement.textContent = `Congratulations, you've borrowed the book ${bookTitle} by ${book.author}`;
+                bookList.appendChild(liElement);
+                resolve(`Congratulations! The book ${book.title} by ${book.author} was borrowed!`);
             }else{
-                reject(`Sorry, but the book couldn't be borrowed`);
+                reject(`Sorry, no copies available`);
             }
         }, 2000);
     });
 }
 
-libraryBooks.addBooks("978-8888888888", "1984", "George Orwell", 1949, 9.5);
-console.log(libraryBooks.books);
+libraryBooks.addBooks("978-1234567890", "Test Book", "John Doe", 2020, 8.5, "Fiction", 3);
+libraryBooks.listBooks();
