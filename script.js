@@ -7,6 +7,7 @@ const addBookModal = document.getElementById("addBookModal");
 const sendBookBrn = document.getElementById("sendBook");
 const borrowBookBtn = document.getElementById("borrowBookBtn");
 const suggestRandomBookBtn = document.getElementById("suggestRandomBook");
+const findAuthorBtn = document.getElementById("findAuthorBtn");
 //Let scope varaibles:
 let isBorrowing = false;
 
@@ -66,7 +67,24 @@ suggestRandomBookBtn.addEventListener('click', async function(){
     } catch (error) {
         console.log("Couldn't do it");
     }
-})
+});
+
+findAuthorBtn.addEventListener('click', async function(){
+    const query = searchBar.value;
+    if (!query){
+        console.log("Type the book");
+        return;
+    };
+    try {
+        const bookTitle = Object.values(libraryBooks.books).find(book => book.title.toLowerCase().includes(query.toLowerCase()));
+        const author = await libraryBooks.findAuthor(query);
+        const li = document.createElement("li");
+        li.textContent = `${bookTitle.title}'s author is: ${author}`
+        bookList.appendChild(li);
+    } catch (error) {
+        console.log("Error: ", error);
+    }
+});
 
 const libraryBooks = {
     books: {
@@ -122,6 +140,16 @@ const libraryBooks = {
         }else{
             console.log("The books exists or is already reserved.");
         }
+    },
+    findAuthor(title){
+        return new Promise((resolve, reject) => {
+            setTimeout(() => {
+                const respectedBook = Object.values(this.books).find(book => book.title.toLowerCase().includes(title.toLowerCase()))
+
+                if (!respectedBook) reject("Book's author not found")
+                else resolve(respectedBook.author);
+            }, 1000)
+        })
     },
     filterBooksByGenre(genre){
         if (typeof genre !== "string" || genre.trim() === ""){
@@ -203,12 +231,54 @@ const libraryBooks = {
         results.forEach((result, index) => {
             const li = document.createElement("li");
             if (result.status === "fulfilled"){
-                li.textContent = `Borrowed: ${result.value} successfully!`;
+                li.textContent = `Borrowed: ${result.value}`;
             }else{
                 li.textContent = `Failed to borrow: "${titles[index]}": ${result.reason}`
             }
             bookList.appendChild(li);
-        })
+        });
+    },
+    rateBook(title, newRating){
+        const book = Object.values(this.books).find(t => t.title.toLowerCase().includes(title.toLowerCase()));
+        const Rating = parseFloat(newRating);
+        if (!title || !newRating || typeof title !== "string" || isNaN(newRating) || newRating < 0 || newRating > 10){
+            console.log("Error: Wrong values!");
+            return;
+        }
+
+        if (!book){
+            console.log("No book found");
+            return;
+        }
+
+        book.rating = Rating;
+        console.log("Book successfully rated!");
+        return `You rated ${book} with ${Rating} successfully`;
+    },
+    async borrowAndRate(newRating, ...titles){//Call on the UI:
+        try {
+            if (!titles.length || titles.some(t => typeof t !== "string")){
+                console.log("Something wrong!");
+                return;
+            }
+            const results = await Promise.all(titles.map(t => borrowBook(t.trim())));
+            const ratedResults = results.map((borrowMsg, i) => {
+                this.rateBook(titles[i].trim(), parseFloat(newRating));
+            })
+    
+            ratedResults.forEach(ratingResult => {
+                console.log(rslt || "Error!");
+                const li = document.createElement("li");
+                li.textContent = `${results[i]} - ${ratingResult || "Rating failed"}`
+                bookList.appendChild(li);
+            })
+
+        } catch (error) {
+            const li = document.createElement("li");
+            li.textContent = `Error: ${error}`
+            bookList.appendChild(li);
+            console.log("Error: ", error);
+        }
     }
 }
 
