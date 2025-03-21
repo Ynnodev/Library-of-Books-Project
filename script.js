@@ -8,8 +8,10 @@ const sendBookBrn = document.getElementById("sendBook");
 const borrowBookBtn = document.getElementById("borrowBookBtn");
 const suggestRandomBookBtn = document.getElementById("suggestRandomBook");
 const findAuthorBtn = document.getElementById("findAuthorBtn");
+const suggestByGenreBtn = document.getElementById("suggestByGenreBtn");
 //Let scope varaibles:
 let isBorrowing = false;
+let suggestByGenreActvt = false;
 
 searchBar.addEventListener('keypress', async (e) => {
     if (e.key === "Enter" && isBorrowing){
@@ -19,7 +21,35 @@ searchBar.addEventListener('keypress', async (e) => {
         } catch (error) {
             console.log(error);
         }
-    }else if (e.key == "Enter" && !isBorrowing){
+    }
+    
+    if (e.key === "Enter" && suggestByGenreActvt){
+        const searchLi = document.createElement("li");
+        searchLi.textContent = `Searching...`
+        try {
+            if (bookList.children){
+                bookList.replaceChildren("");
+            }
+
+            bookList.appendChild(searchLi);
+            const results = await libraryBooks.suggestByGenre(searchBar.value);
+            searchLi.style.display = `none`;
+
+            results.forEach((result, i) => {
+                const li = document.createElement("li");
+                li.textContent = `Suggestion: ${result.title} (${result.genre})`;
+                bookList.appendChild(li);
+            })
+        } catch (error) {
+            searchLi.style.display = `none`;
+            const li = document.createElement("li");
+            li.textContent = `Error: ${error}`;
+            bookList.appendChild(li);
+            console.log(`Error: ${error}`);
+        }
+    }
+
+    if (e.key === "Enter" && !isBorrowing){
         searchBook(searchBar.value);
     }
 });
@@ -84,6 +114,16 @@ findAuthorBtn.addEventListener('click', async function(){
     } catch (error) {
         console.log("Error: ", error);
     }
+});
+
+suggestByGenreBtn.addEventListener('click', function(){
+    suggestByGenreActvt = !suggestByGenreActvt;
+    if (suggestByGenreActvt){
+        searchBar.setAttribute('placeholder', "Type in a book genre, please!");
+    }else{
+        searchBar.setAttribute('placeholder', "Type a Book's Title!");
+    }
+    console.log(suggestByGenreActvt);
 });
 
 const libraryBooks = {
@@ -206,6 +246,20 @@ const libraryBooks = {
             }, 2000)
         })
     },
+    suggestByGenre(bookGenre){
+        return new Promise((resolve, reject) => {
+            setTimeout(() => {
+                const genreBooks = Object.values(this.books).filter(currB => currB.genre.trim().toLowerCase().includes(bookGenre.trim().toLowerCase()) && currB.availableCopies > 0);
+
+                if (!genreBooks.length){
+                    reject(`No books found in ${bookGenre}`);
+                    return;
+                }
+
+                resolve(genreBooks);
+            }, 2000);
+        })
+    },
     checkBookAvailable(book){//Call this method on the UI!
         return new Promise((resolve, reject) => {
             setTimeout(() => {
@@ -313,10 +367,11 @@ function borrowBook(bookTitle){
 
             if (success && book.availableCopies > 0){
                 book.availableCopies--;
+                book.borrowedDate = new Date();
                 const liElement = document.createElement("li");
-                liElement.textContent = `Congratulations, you've borrowed the book ${bookTitle} by ${book.author}`;
+                liElement.textContent = `Congratulations, you've borrowed the book ${bookTitle} by ${book.author} at ${book.borrowedDate}`;
                 bookList.appendChild(liElement);
-                resolve(`Congratulations! The book ${book.title} by ${book.author} was borrowed!`);
+                resolve(`Congratulations! The book ${book.title} by ${book.author} was borrowed at ${book.borrowedDate}!`);
             }else{
                 reject(`Sorry, no copies available`);
             }
@@ -325,6 +380,4 @@ function borrowBook(bookTitle){
 }
 
 libraryBooks.addBooks("978-1234567890", "Test Book", "John Doe", 2020, 8.5, "Fiction", 3);
-libraryBooks.listBooks();
-//Testing new borrowMultipleBook feature:
-libraryBooks.borrowMultipleSettled("To Kill a Mockingbird", "Fake Book", "The Pragmatic Programmer");
+libraryBooks.addBooks("978-1234567891", "The Pragmatic Programmer 2", "Andrew Hunt", 2025, 9.5, "Computer", 6);
