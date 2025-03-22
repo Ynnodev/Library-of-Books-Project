@@ -9,6 +9,7 @@ const borrowBookBtn = document.getElementById("borrowBookBtn");
 const suggestRandomBookBtn = document.getElementById("suggestRandomBook");
 const findAuthorBtn = document.getElementById("findAuthorBtn");
 const suggestByGenreBtn = document.getElementById("suggestByGenreBtn");
+const userBorrowBookBtn = document.getElementById("userBorrowBookBtn");
 //Let scope varaibles:
 let isBorrowing = false;
 let suggestByGenreActvt = false;
@@ -16,7 +17,7 @@ let suggestByGenreActvt = false;
 searchBar.addEventListener('keypress', async (e) => {
     if (e.key === "Enter" && isBorrowing){
         try {
-            const result = await borrowBook(searchBar.value);
+            const result = await mainLibrary.borrowBook(searchBar.value);
             console.log(result);
         } catch (error) {
             console.log(error);
@@ -32,7 +33,7 @@ searchBar.addEventListener('keypress', async (e) => {
             }
 
             bookList.appendChild(searchLi);
-            const results = await libraryBooks.suggestByGenre(searchBar.value);
+            const results = await mainLibrary.suggestByGenre(searchBar.value);
             searchLi.style.display = `none`;
 
             results.forEach((result, i) => {
@@ -50,7 +51,7 @@ searchBar.addEventListener('keypress', async (e) => {
     }
 
     if (e.key === "Enter" && !isBorrowing){
-        searchBook(searchBar.value);
+        mainLibrary.searchBook(searchBar.value);
     }
 });
 
@@ -69,7 +70,7 @@ sendBookBrn.addEventListener('click', function(){
     const bookAV = parseInt(document.getElementById("acBookInput").value);
 
     //ERROR: The books isn't being added to the books object.
-    libraryBooks.addBooks(isbn, bookTitle, bookAuthor, bookYear, bookRating, bookGenre, bookAV);
+    mainLibrary.addBooks(isbn, bookTitle, bookAuthor, bookYear, bookRating, bookGenre, bookAV);
     console.log("Book added successfuly!", libraryBooks.books[isbn]);
     addBookModal.close();
     addBookForm.reset();
@@ -90,7 +91,7 @@ borrowBookBtn.addEventListener('click', function(){
 
 suggestRandomBookBtn.addEventListener('click', async function(){
     try {
-        const suggestedBook = await libraryBooks.suggestRandomBook();
+        const suggestedBook = await mainLibrary.suggestRandomBook();
         const liElement = document.createElement("li");
         liElement.textContent = `Suggested Book: ${suggestedBook.title} by ${suggestedBook.author}`
         bookList.appendChild(liElement);
@@ -106,8 +107,8 @@ findAuthorBtn.addEventListener('click', async function(){
         return;
     };
     try {
-        const bookTitle = Object.values(libraryBooks.books).find(book => book.title.toLowerCase().includes(query.toLowerCase()));
-        const author = await libraryBooks.findAuthor(query);
+        const bookTitle = Object.values(mainLibrary.books).find(book => book.title.toLowerCase().includes(query.toLowerCase()));
+        const author = await mainLibrary.findAuthor(query);
         const li = document.createElement("li");
         li.textContent = `${bookTitle.title}'s author is: ${author}`
         bookList.appendChild(li);
@@ -126,11 +127,13 @@ suggestByGenreBtn.addEventListener('click', function(){
     console.log(suggestByGenreActvt);
 });
 
-const libraryBooks = {
-    books: {
-        "978-0143127741": {title: "To Kill a Mockingbird", author: "Harper Lee", year: 1960, rating: 10, genre: "Romance", availableCopies: 4, available: true},
-        "978-0143127742": {title: "The Pragmatic Programmer", author: "Andy Hunt", year: 1999, rating: 9.3, genre: "Computer", availableCopies: 5, available: true}
-    },
+class Library {
+    constructor(){
+        this.books = {
+            "978-0143127741": {title: "To Kill a Mockingbird", author: "Harper Lee", year: 1960, rating: 10, genre: "Romance", availableCopies: 4, available: true},
+            "978-0143127742": {title: "The Pragmatic Programmer", author: "Andy Hunt", year: 1999, rating: 9.3, genre: "Computer", availableCopies: 5, available: true}
+        }
+    }
 
     addBooks(isbn, title, author, year, rating, genre, availableCopies, available = true){
         if (this.books.hasOwnProperty(isbn)){
@@ -139,28 +142,13 @@ const libraryBooks = {
         }
 
         this.books[isbn] = { title, author, year, rating, genre, availableCopies, available }
-    },
+    }
+
     listBooks(){
         console.log("Book Library: ");
         console.log(Object.entries(this.books));
-    },
-    searchBook(query){
-        const results = Object.keys(this.books).filter(isbn => {
-            const book = this.books[isbn];
-            return book.title.trim().toLowerCase().includes(query.toLowerCase()) || book.author.toLowerCase().includes(query.toLowerCase())
-        });
+    }
 
-        if (results.length === 0){
-            console.log("Sorry, no books found!");
-            return;
-        }
-
-        console.log(`Results for the query: ${query}`);
-        results.forEach(isbn => {
-            const book = this.books[isbn];
-            console.log(`${book.title} by ${book.author}`);
-        });
-    },
     returnBook(title){
         const bookObj = Object.values(this.books).find(book => book.title === title);
 
@@ -170,7 +158,8 @@ const libraryBooks = {
         }else{
             console.log(`"${title}" doesn't exist!`);
         }
-    },
+    }
+
     reserveBooks(title){
         const bookObj = Object.values(this.books).find(book => book.title.toLowerCase().includes(title.toLowerCase()));
 
@@ -180,7 +169,8 @@ const libraryBooks = {
         }else{
             console.log("The books exists or is already reserved.");
         }
-    },
+    }
+
     findAuthor(title){
         return new Promise((resolve, reject) => {
             setTimeout(() => {
@@ -190,7 +180,8 @@ const libraryBooks = {
                 else resolve(respectedBook.author);
             }, 1000)
         })
-    },
+    }
+
     filterBooksByGenre(genre){
         if (typeof genre !== "string" || genre.trim() === ""){
             console.log("Incorrect genre or not a string!");
@@ -201,7 +192,8 @@ const libraryBooks = {
             if (book.genre === genre) acc.push(`${book.title} by ${book.author}`);
             return acc;
         }, []).join("\n");
-    },
+    }
+
     getTopRatedBooks(rating){
         if (isNaN(rating) || rating < 0 || rating > 10){
             console.log("Not a number or invalid rating!");
@@ -216,7 +208,8 @@ const libraryBooks = {
         }
 
         books.forEach(book => console.log(`${book.title} by ${book.author} - Rating: ${book.rating}`));
-    },
+    }
+
     async borrowMultipleBooks(...titles){
         if (!titles.length || titles.some(t => typeof t !== "string")){
             console.log("Error!!");
@@ -229,7 +222,8 @@ const libraryBooks = {
         } catch (error) {
             console.log("Some books couldn't be borrowed: ", error);
         }
-    },
+    }
+
     suggestRandomBook(){
         return new Promise((resolve, reject) => {
             setTimeout(() => {
@@ -245,7 +239,8 @@ const libraryBooks = {
                 resolve(book);
             }, 2000)
         })
-    },
+    }
+
     suggestByGenre(bookGenre){
         return new Promise((resolve, reject) => {
             setTimeout(() => {
@@ -259,7 +254,8 @@ const libraryBooks = {
                 resolve(genreBooks);
             }, 2000);
         })
-    },
+    }
+
     checkBookAvailable(book){//Call this method on the UI!
         return new Promise((resolve, reject) => {
             setTimeout(() => {
@@ -273,7 +269,8 @@ const libraryBooks = {
                 }
             }, 2000);
         })
-    },
+    }
+
     async borrowMultipleSettled(...titles){//Call this method on the UI!
         if (!titles.length || titles.some(t => typeof t !== "string")){
             console.log("No books identified or not strings!");
@@ -291,7 +288,8 @@ const libraryBooks = {
             }
             bookList.appendChild(li);
         });
-    },
+    }
+
     rateBook(title, newRating){
         const book = Object.values(this.books).find(t => t.title.toLowerCase().includes(title.toLowerCase()));
         const Rating = parseFloat(newRating);
@@ -308,7 +306,8 @@ const libraryBooks = {
         book.rating = Rating;
         console.log("Book successfully rated!");
         return `You rated ${book} with ${Rating} successfully`;
-    },
+    }
+
     async borrowAndRate(newRating, ...titles){//Call on the UI:
         try {
             if (!titles.length || titles.some(t => typeof t !== "string")){
@@ -334,50 +333,110 @@ const libraryBooks = {
             console.log("Error: ", error);
         }
     }
-}
 
-//functions
-function searchBook(search){
-    search = search.trim().toLowerCase();
-
-    if (search.length === 0){
-        console.log("Type something!");
-        return;
+    borrowBook(bookTitle){
+        return new Promise((resolve, reject) => {
+            setTimeout(() => {
+                const success = true;
+                const book = Object.values(this.books).find(book => book.title.toLowerCase().includes(bookTitle.toLowerCase()));
+    
+                if (!book){
+                    reject("Book not found");
+                    return;
+                }
+    
+                if (success && book.availableCopies > 0){
+                    book.availableCopies--;
+                    book.borrowedDate = new Date();
+                    const liElement = document.createElement("li");
+                    liElement.textContent = `Congratulations, you've borrowed the book ${bookTitle} by ${book.author} at ${book.borrowedDate}`;
+                    bookList.appendChild(liElement);
+                    resolve(`Congratulations! The book ${book.title} by ${book.author} was borrowed at ${book.borrowedDate}!`);
+                }else{
+                    reject(`Sorry, no copies available`);
+                }
+            }, 2000);
+        });
     }
 
-    const results = Object.values(libraryBooks.books).filter(book => book.title.toLowerCase().includes(search) || book.author.toLowerCase().includes(search));
-
-    results.forEach(book => {
-        const newElement = document.createElement("li");
-        newElement.textContent = `${book.title} by ${book.author}`;
-        bookList.appendChild(newElement);
-    });
+    searchBook(search){
+        search = search.trim().toLowerCase();
+    
+        if (search.length === 0){
+            console.log("Type something!");
+            return;
+        }
+    
+        const results = Object.values(libraryBooks.books).filter(book => book.title.toLowerCase().includes(search) || book.author.toLowerCase().includes(search));
+    
+        results.forEach(book => {
+            const newElement = document.createElement("li");
+            newElement.textContent = `${book.title} by ${book.author}`;
+            bookList.appendChild(newElement);
+        });
+    }
 }
 
-function borrowBook(bookTitle){
-    return new Promise((resolve, reject) => {
-        setTimeout(() => {
-            const success = true;
-            const book = Object.values(libraryBooks.books).find(book => book.title.toLowerCase().includes(bookTitle.toLowerCase()));
+const mainLibrary = new Library();
 
-            if (!book){
-                reject("Book not found");
-                return;
-            }
+class UserLibrary extends Library {
+    constructor(username){
+        super();
+        this.username = username;
+        this.myBooks = {}
+    }
 
-            if (success && book.availableCopies > 0){
-                book.availableCopies--;
-                book.borrowedDate = new Date();
-                const liElement = document.createElement("li");
-                liElement.textContent = `Congratulations, you've borrowed the book ${bookTitle} by ${book.author} at ${book.borrowedDate}`;
-                bookList.appendChild(liElement);
-                resolve(`Congratulations! The book ${book.title} by ${book.author} was borrowed at ${book.borrowedDate}!`);
-            }else{
-                reject(`Sorry, no copies available`);
-            }
-        }, 2000);
-    });
+    borrowFromMain(bookTitle){
+        return new Promise((resolve, reject) => {
+            setTimeout(() => {
+                const book = Object.values(mainLibrary.books).find(curr => curr.title.trim().toLowerCase().includes(bookTitle.trim().toLowerCase()));
+
+                if (!book) reject("Book not found");
+                else if (book.availableCopies > 0){
+                    book.availableCopies--;
+                    const isbn = Object.keys(this.books).find(key => this.books[key] === book);
+                    this.myBooks[isbn] = { ...book, borrowedDate: new Date() };
+                    resolve(`${this.username} just borrowed: ${book.title}`);
+                    this.showMyBooks();
+                }else{
+                    reject("Sorry, no available copies");
+                }
+            }, 2000)
+        })
+    }
+
+    showMyBooks(){
+        const books = Object.values(this.myBooks);
+        if (bookList.children){
+            bookList.replaceChildren("");
+        }
+        if (!books.length){
+            const li = document.createElement("li");
+            li.textContent = `You've got no books.`
+            bookList.appendChild(li);
+            return;
+        }
+        books.forEach(book => {
+            const li = document.createElement("li");
+            li.textContent = `${book.title} by ${book.author} - Borrowed: ${book.borrowedDate.toDateString()}`
+            bookList.appendChild(li);
+        })
+    }
 }
 
-libraryBooks.addBooks("978-1234567890", "Test Book", "John Doe", 2020, 8.5, "Fiction", 3);
-libraryBooks.addBooks("978-1234567891", "The Pragmatic Programmer 2", "Andrew Hunt", 2025, 9.5, "Computer", 6);
+mainLibrary.addBooks("978-1234567890", "Test Book", "John Doe", 2020, 8.5, "Fiction", 3);
+mainLibrary.addBooks("978-1234567891", "The Pragmatic Programmer 2", "Andrew Hunt", 2025, 9.5, "Computer", 6);
+
+const aliceLibrary = new UserLibrary("Alice");
+
+userBorrowBookBtn.addEventListener('click', async function(){
+    const title = searchBar.value.trim();
+    try {
+        const result = await aliceLibrary.borrowFromMain(title)
+        const li = document.createElement("li");
+        li.textContent = `${result}`
+        bookList.appendChild(li);
+    } catch (error) {
+        console.log("Error: ", error);
+    }
+});//Main Issue: When refreshed, the books are not in .myBooks object anymore because they're not persistat, time to localStorage/indexedDB to jump in the game!
