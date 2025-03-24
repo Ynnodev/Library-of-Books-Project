@@ -10,6 +10,7 @@ const suggestRandomBookBtn = document.getElementById("suggestRandomBook");
 const findAuthorBtn = document.getElementById("findAuthorBtn");
 const suggestByGenreBtn = document.getElementById("suggestByGenreBtn");
 const userBorrowBookBtn = document.getElementById("userBorrowBookBtn");
+const returnFromMyBooks = document.getElementById("returnFromMyBooks");
 //Let scope varaibles:
 let isBorrowing = false;
 let suggestByGenreActvt = false;
@@ -407,6 +408,22 @@ class UserLibrary extends Library {
         })
     }
 
+    returnFromMain(bookTitle){
+        return new Promise((resolve, reject) => {
+            setTimeout(() => {
+                const book = Object.values(this.myBooks).find(curr => curr.title.trim().toLowerCase().includes(bookTitle.trim().toLowerCase()));
+                if (!book) reject(`Couldn't find ${bookTitle}!`);
+                else{
+                    const isbn = Object.keys(this.myBooks).find(key => this.myBooks[key] === book);
+                    const mainBook = this.books[isbn];
+                    delete this.myBooks[isbn];
+                    localStorage.setItem(`${this.username}_books`, JSON.stringify(this.myBooks));
+                    resolve(`${this.username} returned: "${book.title}"`);
+                }
+            }, 2000)
+        })
+    }
+
     showMyBooks(){
         const books = Object.values(this.myBooks);
         if (bookList.children){
@@ -477,3 +494,13 @@ userBorrowBookBtn.addEventListener('click', async function(){
         console.log("Error: ", error);
     }
 });
+
+returnFromMyBooks.addEventListener('click', async function(){
+    if (bookList.children) bookList.replaceChildren("");
+    const title = searchBar.value.trim();
+    const result = await aliceLibrary.returnFromMain(title);
+    
+    const li = document.createElement("li");
+    li.textContent = `${result}`
+    bookList.appendChild(li);
+})

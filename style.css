@@ -114,7 +114,8 @@ body{
 .main-section{
     width: 100%;
     height: 93vh;
-    background-color: yellow;
+    display: flex;
+    align-items: center;
     background-image: url(imgs/library.png);
     background-repeat: no-repeat;
     background-size: cover;
