@@ -383,7 +383,8 @@ class UserLibrary extends Library {
     constructor(username){
         super();
         this.username = username;
-        this.myBooks = {}
+        this.myBooks = JSON.parse(localStorage.getItem(`${this.username}_books`)) || {};
+        this.favoriteBooks = JSON.parse(localStorage.getItem(`${this.username}_favoriteBooks`)) || {};
     }
 
     borrowFromMain(bookTitle){
@@ -396,6 +397,7 @@ class UserLibrary extends Library {
                     book.availableCopies--;
                     const isbn = Object.keys(this.books).find(key => this.books[key] === book);
                     this.myBooks[isbn] = { ...book, borrowedDate: new Date() };
+                    localStorage.setItem(`${this.username}_books`, JSON.stringify(this.books));
                     resolve(`${this.username} just borrowed: ${book.title}`);
                     this.showMyBooks();
                 }else{
@@ -422,6 +424,41 @@ class UserLibrary extends Library {
             bookList.appendChild(li);
         })
     }
+
+    addToFavorites(bookTitle){
+        const book = Object.values(this.books).find(curr => curr.title.trim().toLowerCase().includes(bookTitle.trim().toLowerCase()));
+
+        if (!book) return `No books available`;
+        const isbn = Object.keys(this.books).find(key => this.books[key] === book);
+        this.favoriteBooks[isbn] = { ...book };
+        localStorage.setItem(`${this.username}_favorites`, JSON.stringify(this.favoriteBooks));
+        return `${this.username} added ${book.title} to favorites!`;
+    }
+
+    showFavorites(){
+        const favorites = Object.values(this.favoriteBooks);
+        if (!favorites.length){
+            console.log("No favorite books!");
+            return;
+        }
+
+        if (bookList.children) bookList.replaceChildren("")
+        favorites.forEach(book => {
+            const li = document.createElement("li");
+            li.textContent = `${book.title} by ${book.author}`
+            bookList.appendChild(li);
+        })
+    }
+
+    removeFromFavorites(bookTitle){
+        const book = Object.values(this.books).find(book => book.title.trim().toLowerCase().includes(bookTitle.trim().toLowerCase()));
+        if (!book) console.log("Couldn't find the book!");
+        const isbn = Object.keys(this.books).find(key => this.books[key] === book);
+        if (!this.favoriteBooks[isbn]) console.log("Couldn't find the book");
+        delete this.favoriteBooks[isbn];
+        localStorage.setItem(`${this.username}_favorites`, JSON.stringify(this.favoriteBooks));
+        return `${book.title} by ${book.author} removed from ${this.username}'s favorites!`;
+    }
 }
 
 mainLibrary.addBooks("978-1234567890", "Test Book", "John Doe", 2020, 8.5, "Fiction", 3);
@@ -439,4 +476,4 @@ userBorrowBookBtn.addEventListener('click', async function(){
     } catch (error) {
         console.log("Error: ", error);
     }
-});//Main Issue: When refreshed, the books are not in .myBooks object anymore because they're not persistat, time to localStorage/indexedDB to jump in the game!
+});
