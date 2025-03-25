@@ -7,6 +7,7 @@
     <meta name="keywords" content="library, programming, online, books, borrow books, return books, library app">
     <meta name="description" content="A WebLibrary App">
     <link rel="stylesheet" type="text/css" href="signScreen.css">
+    <link rel="icon" href="imgs/books_favicon.png">
     <title>WebLibrary101 - Log In</title>
 </head>
 <body>
@@ -15,21 +16,31 @@
             <div class="main-content">
                 <div class="main-content-secnd-div">
                     <div class="idkDiv">
-                        <h2>WebLibrary101 - <label id="login/signup">Login</label></h2>
+                        <h2>WebLibrary101 - 
+                            <label class="login" id="loginLabel">Login</label>
+                            <label class="register">Register</label>
+                        </h2>
                     </div>
                 </div>
                 <div class="line"></div>
                 <div class="main-credentials">
                     <div class="main-form-div">
                         <form>
+
                             <label class="label" for="usernameInput">Username: </label>
                             <br><input id="usernameInput" class="input" type="text" placeholder="enter your username" minlength="5" maxlength="15" required>
                             <br><br><br>
                             <label class="label" for="passwordInput">Password: </label>
                             <br><input id="passwordInput" class="input" type="password" placeholder="enter your password" minlength="8" maxlength="12" required>
+
+                            <small class="login" id="notAccount">Doesn't have an account? <a href=""><button class="login" id="SignUpBtn">Sign Up</button></a></small>
+
+                            <small class="register" id="haveAccount">Already have an account? <a href=""><button class="register" id="logInBtn">Log In</button></a></small>
+
                             <div class="buttondiv">
-                                <button class="button" type="submit">Submit</button>
+                                <a href=""><button id="submitBtn" class="button" type="submit">Submit</button></a>
                             </div>
+
                         </form>
                     </div>
                 </div>
