@@ -127,3 +127,11 @@ body{
     color: red;
     display: none;
 }
+
+.hidden{
+    display: none;
+}
+
+.visible{
+    display: inline-block;
+}

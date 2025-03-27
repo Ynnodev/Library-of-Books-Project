@@ -1,4 +1,4 @@
-import { Library } from "./library";
+import { Library } from "./library.js";
 
 export class UserLibrary extends Library {
     constructor(username){

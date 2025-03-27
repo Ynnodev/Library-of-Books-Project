@@ -1,4 +1,5 @@
-import { UserLibrary } from "./userLibrary";
+import { Library } from "./library.js";
+import { UserLibrary } from "./userLibrary.js";
 
 //Library of books:
 const searchBar = document.getElementById("searchBar");
