@@ -230,15 +230,19 @@ export class Library {
         });
     }
 
-    searchBook(search){
-        search = search.trim().toLowerCase();
+    searchBook(searchTerm){
+        search = searchTerm.trim().toLowerCase();
     
         if (search.length === 0){
             console.log("Type something!");
             return;
         }
     
-        const results = Object.values(libraryBooks.books).filter(book => book.title.toLowerCase().includes(search) || book.author.toLowerCase().includes(search));
+        const results = Object.values(libraryBooks.books).filter(book => {
+            const matchBook = book.title.includes(search)
+            const matchAuthor = book.author.includes(search)
+            return matchBook || matchAuthor;
+        })
     
         results.forEach(book => {
             const newElement = document.createElement("li");

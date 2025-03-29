@@ -6,6 +6,7 @@ export class UserLibrary extends Library {
         this.username = username;
         this.myBooks = JSON.parse(localStorage.getItem(`${this.username}_books`)) || {};
         this.favoriteBooks = JSON.parse(localStorage.getItem(`${this.username}_favoriteBooks`)) || {};
+        this.favoriteGenres = JSON.parse(localStorage.getItem(`${this.username}_favoriteGenres`)) || {};
     }
 
     borrowFromMain(bookTitle){

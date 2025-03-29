@@ -1,7 +1,7 @@
 const form = document.getElementById("mainForm");
 const submitBtn = document.getElementById("submitBtn");
-const registerBtn = document.getElementById("SignUpBtn");
-const loginBtn = document.getElementById("logInBtn");
+const registerBtn = document.getElementById("registerBtn");
+const loginBtn = document.getElementById("loginBtn");
 const allLogin = document.querySelectorAll(".login");
 const allRegister = document.querySelectorAll(".register");
 const usernameInput = document.getElementById("usernameInput");
@@ -13,11 +13,11 @@ const usersKey = "libraryUsers";
 let loginActive = false;
 
 //Have account - Login Button
-loginBtn.addEventListener('click', function(){ //The form thinks this button is to send user info
+loginBtn.addEventListener('click', function(){
     loginActive = true;
-    allRegister.forEach(each => each.style.display = "none");
-
     allLogin.forEach(each => each.style.display = "inline-block");
+
+    allRegister.forEach(each => each.style.display = "none");
 });
 
 //No account - Register button
@@ -104,7 +104,7 @@ function authenticateUser(username, password){
     return true;
 }
 
-function getUser(username){ //To do: Make this available for other files!!
+export function getUser(username){ //To do: Make this available for other files!!
     const users = JSON.parse(localStorage.getItem(usersKey));
     return users[username];
 }

@@ -1,5 +1,6 @@
 import { Library } from "./library.js";
 import { UserLibrary } from "./userLibrary.js";
+import { getUser } from "./signScreen.js";
 
 //Library of books:
 const searchBar = document.getElementById("searchBar");
@@ -160,5 +161,16 @@ returnFromMyBooks.addEventListener('click', async function(){
     bookList.appendChild(li);
 })
 
+getUser("Alice")
 aliceLibrary.addToFavorites("To Kill a Mockingbird")
 aliceLibrary.addToFavorites("The Pragmatic Programmer");
+
+//Playing with Sets():
+
+
+const newSet = new Set();
+newSet.add("Hello World");
+newSet.add(22);
+newSet.add({name: "Luna Maria de Souza Dias"});
+console.log(newSet.size);
+console.log("So awesome!!");
